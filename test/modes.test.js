@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { isLegalDart } from "../logic/darts.js";
 import { bracketSlots } from "../logic/tournament.js";
 import { legalTargets } from "../logic/random.js";
-import { act, addDarts, addTyped, botThrow, create, project, undo } from "../logic/index.js";
+import { act, addDarts, addTyped, botThrow, create, project, rulesText, undo } from "../logic/index.js";
 
 const T = (value) => ({ type: "number", multiplier: 3, value });
 const D = (value) => ({ type: "number", multiplier: 2, value });
@@ -104,12 +104,57 @@ describe("121", () => {
     assert.equal(view.raw.rows[0].completed, 121);
     assert.equal(view.raw.rows[0].safe, 121);
     assert.equal(view.raw.rows[0].target, 122);
+    assert.equal(view.headline, "122");
     state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
     state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
     state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
     view = project(state);
     assert.equal(view.raw.rows[0].target, 121);
     assert.equal(view.raw.rows[0].completed, 121);
+  });
+
+  it("takes a typed total off this visit only and carries the remainder", () => {
+    let state = create("ladder", { rngSeed: 1, attempts: 4, players: [{ name: "Ann" }] });
+    state = addTyped(state, { total: 60, dartsUsed: 3 });
+    let view = project(state);
+    assert.equal(view.headline, "61");
+    assert.equal(view.headlineLabel, "remaining");
+    assert.equal(view.raw.rows[0].remaining, 61);
+    assert.equal(view.raw.rows[0].used, 3);
+    assert.equal(view.raw.rows[0].target, 121);
+    assert.equal(view.phase, "live");
+    state = addTyped(state, { total: 60, dartsUsed: 3 });
+    view = project(state);
+    assert.equal(view.headline, "61");
+    assert.equal(view.raw.rows[0].remaining, 61);
+    assert.equal(view.raw.rows[0].used, 6);
+    state = addTyped(state, { total: 41, dartsUsed: 2 });
+    view = project(state);
+    assert.equal(view.raw.rows[0].remaining, 20);
+    assert.equal(view.raw.rows[0].used, 8);
+    state = addTyped(state, { total: 20, dartsUsed: 1 });
+    view = project(state);
+    assert.equal(view.raw.rows[0].completed, 121);
+    assert.equal(view.raw.rows[0].target, 122);
+    assert.equal(view.raw.rows[0].safe, null);
+    assert.equal(view.headline, "122");
+  });
+
+  it("makes any checkout the safehouse when that setting is on", () => {
+    let state = create("ladder", { rngSeed: 1, attempts: 4, safehouse: "any", players: [{ name: "Ann" }] });
+    state = addTyped(state, { total: 60, dartsUsed: 3 });
+    state = addTyped(state, { total: 41, dartsUsed: 3 });
+    state = addTyped(state, { total: 20, dartsUsed: 1 });
+    let view = project(state);
+    assert.equal(view.raw.rows[0].safe, 121);
+    assert.equal(view.raw.rows[0].target, 122);
+    state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
+    state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
+    state = addTyped(state, { total: 0, miss: true, dartsUsed: 3 });
+    view = project(state);
+    assert.equal(view.raw.rows[0].target, 121);
+    assert.match(rulesText("ladder", { attempts: 8, safehouse: "three" }), /three darts or fewer/i);
+    assert.match(rulesText("ladder", { attempts: 8, safehouse: "any" }), /Any checkout becomes the safehouse/i);
   });
 });
 

@@ -1,4 +1,4 @@
-/** 121. Climb checkout targets. The safehouse is the last finish in three darts or fewer. */
+/** 121. Each visit comes off the remaining total. The safehouse is optional. */
 
 import { normaliseDart } from "./darts.js";
 import { makeSeed } from "./bot.js";
@@ -12,12 +12,13 @@ export function create(config = {}) {
   const people = preparePlayers(config.players, { min: 1, max: 4 });
   const attempts = Number.isInteger(config.attempts) ? config.attempts : 8;
   if (attempts < 1 || attempts > 30) throw new Error("Choose how many attempts");
+  const safehouse = config.safehouse === "any" ? "any" : "three";
   return {
     v: 1,
     mode: "ladder",
     rngSeed: makeSeed(config),
     players: people.map((player, index) => ({ ...player, swatch: PLAYER_COLOURS[index] })),
-    config: { attempts },
+    config: { attempts, safehouse },
     events: [],
   };
 }
@@ -37,7 +38,7 @@ export function project(state) {
       pending.push(event.dart);
       const seq = scoreSequence(row.visitRemaining, true, pending, "straight", "double");
       if (seq.bust || seq.checkout || pending.length === 3) {
-        commit(row, seq, state.config.attempts);
+        commit(row, seq, state.config.attempts, state.config.safehouse);
         pending = [];
         turn = index + 1;
       }
@@ -54,7 +55,7 @@ export function project(state) {
         miss: event.miss,
         doubleAttempts: event.doubleAttempts,
       });
-      commit(row, seq, state.config.attempts);
+      commit(row, seq, state.config.attempts, state.config.safehouse);
       turn = index + 1;
     }
   }
@@ -63,23 +64,24 @@ export function project(state) {
   const active = nextUp(turn) ?? 0;
   const current = state.players[active];
   const row = rows[active];
+  const shown = liveRemaining(row, pending);
   return shell({
     phase: done ? "done" : "live",
     title: "121",
-    kicker: `${state.config.attempts} attempts · 9 darts · double out`,
-    note: row ? `Safehouse ${row.safe ?? "121"} · ${row.used} darts used` : "",
-    headline: String(row?.target ?? 121),
-    headlineLabel: "target",
+    kicker: row ? `Target ${row.target} · ${state.config.attempts} attempts · double out` : "121",
+    note: row ? `${row.used} of 9 darts · ${safeText(row)}` : "",
+    headline: String(shown),
+    headlineLabel: "remaining",
     subhead: current.name,
     colour: current.swatch,
     players: state.players.map((player, index) => ({
       name: player.name,
-      primary: String(rows[index].completed || "—"),
-      secondary: `Now ${rows[index].target}`,
+      primary: String(index === active ? shown : rows[index].remaining),
+      secondary: `Target ${rows[index].target}`,
       active: !done && index === active,
       out: rows[index].done,
       swatch: player.swatch,
-      detail: rows[index].safe ? `Safe ${rows[index].safe}` : "No safehouse",
+      detail: `${rows[index].used} of 9 · ${safeText(rows[index])}`,
     })),
     darts: pending.map((dart) => ({ label: dart.type })),
     dartsThisVisit: pending.length,
@@ -91,7 +93,7 @@ export function project(state) {
     botLevel: current.bot,
     bot: current.bot ? { level: current.bot, role: "score", remaining: row.remaining, opened: true, dartsLeft: Math.max(1, 3 - pending.length), inRule: "straight", outRule: "double" } : null,
     end: done ? rank(state, rows) : null,
-    rulesBrief: "Start at 121 and check out on a double within nine darts. A bust cancels the visit but still uses its three-dart allowance. Success raises the next target by one. Failure drops you to the last target you finished in three darts or fewer, or back to 121. The climb stops at 170.",
+    rulesBrief: rulesText(state.config),
     raw: { rows, active, remaining: row.remaining, opened: true, inRule: "straight", outRule: "double" },
   });
 
@@ -103,7 +105,7 @@ export function project(state) {
     return null;
   }
 
-  function commit(row, seq, limit) {
+  function commit(row, seq, limit, safehouse) {
     row.doubleAttempts += seq.attempts || 0;
     row.doubleHits += seq.hits || 0;
     if (seq.tracked) row.tracked = true;
@@ -112,7 +114,7 @@ export function project(state) {
       row.remaining = row.visitRemaining;
     } else if (seq.checkout) {
       row.used = row.visitUsed + seq.dartsUsed;
-      succeed(row, limit);
+      succeed(row, limit, safehouse);
       return;
     } else {
       row.used = row.visitUsed + (seq.dartsUsed || 3);
@@ -121,6 +123,18 @@ export function project(state) {
     if (row.used >= 9) fail(row, limit);
     else arm(row);
   }
+}
+
+function liveRemaining(row, pending) {
+  if (!row) return 121;
+  if (!pending.length) return row.remaining;
+  const seq = scoreSequence(row.visitRemaining, true, pending, "straight", "double");
+  if (seq.bust) return row.visitRemaining;
+  return seq.remaining;
+}
+
+function safeText(row) {
+  return row.safe == null ? "No safehouse" : `Safehouse ${row.safe}`;
 }
 
 function fresh() {
@@ -155,13 +169,13 @@ function arm(row) {
   row.visitUsed = row.used;
 }
 
-function succeed(row, limit) {
+function succeed(row, limit, safehouse) {
   row.finishes += 1;
   row.success += 1;
   row.finishDarts += row.used;
   row.streak += 1;
   if (row.streak > row.bestStreak) row.bestStreak = row.streak;
-  if (row.used <= 3) row.safe = row.target;
+  if (safehouse === "any" || row.used <= 3) row.safe = row.target;
   if (row.target > row.completed) row.completed = row.target;
   const capped = row.target >= 170;
   row.attemptsUsed += 1;
@@ -261,12 +275,23 @@ export function aim(view, rand) {
 
 export function schema() {
   return {
-    fields: [{ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 }],
+    fields: [
+      { id: "visit", type: "note", label: "This visit only. Up to three darts." },
+      { id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 },
+    ],
     common: [26, 41, 45, 60, 81, 85, 100, 140],
     miss: true,
     bust: true,
-    placeholder: "Points that count",
+    placeholder: "This visit",
   };
+}
+
+export function rulesText(config = {}) {
+  const attempts = Number(config.attempts) || 8;
+  const safe = config.safehouse === "any"
+    ? "Any checkout becomes the safehouse, however many darts it took."
+    : "Only a checkout in three darts or fewer becomes the safehouse.";
+  return `Start at 121 and check out on a double. Each visit is scored on its own, dart by dart or as a total of up to three darts, and that score comes off the remaining total. The next visit continues from what is left. You have nine darts for the attempt. A bust wipes that visit's score and still uses three darts. ${safe} If the nine darts run out, you drop to the safehouse, or back to 121 if you have none. A checkout raises the next target by one. The climb stops at 170. ${attempts} attempts each.`;
 }
 
 export function step(state) {

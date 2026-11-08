@@ -17,7 +17,7 @@ const CATALOGUE = [
   { id: "doubles", group: "Training", name: "Doubles training", blurb: "Stay on a double until you hit it. That hit ends the turn.", players: { min: 1, max: 4, teams: false }, defaults: { bull: true } },
   { id: "random", group: "Training", name: "Random checkout", blurb: "Draw a finish and take it out. Three-dart doubles skip the bogeys.", players: { min: 1, max: 4, teams: false }, defaults: { budget: "3", outRule: "double", rounds: "8", preset: "random", shared: true } },
   { id: "clock", group: "Training", name: "Around the clock", blurb: "Hit 1, then 2, and onwards. A hit moves the target straight away.", players: { min: 1, max: 4, teams: false }, defaults: { filter: "any", bull: "off", skip: false, equalTurn: false, descending: false } },
-  { id: "ladder", group: "Training", name: "121", blurb: "Check out 121 in nine darts, then climb. Three-dart finishes are the safehouse.", players: { min: 1, max: 4, teams: false }, defaults: { attempts: "8" } },
+  { id: "ladder", group: "Training", name: "121", blurb: "Check out 121 in nine darts, one visit at a time, then climb.", players: { min: 1, max: 4, teams: false }, defaults: { attempts: "8", safehouse: "three" } },
   { id: "halve", group: "Party", name: "Halve-It", blurb: "Nine rounds from 15 to bull. Miss the round and the total is halved.", players: { min: 1, max: 4, teams: true }, defaults: {} },
   { id: "shanghai", group: "Party", name: "Shanghai", blurb: "Only the round number scores. Single, double and treble wins at once.", players: { min: 1, max: 4, teams: true }, defaults: { length: "7", requireNumber: false, requireTreble: false } },
   { id: "killer", group: "Party", name: "Killer", blurb: "Own double makes you a killer. An opponent’s double costs a life.", players: { min: 2, max: 4, teams: false }, defaults: { numbersText: "" } },
@@ -426,8 +426,18 @@ function stepExtra(id, dir, target) {
     const next = Math.max(0, Math.min(9, Number(ui.extras.marks[target] || 0) + dir));
     ui.extras.marks[target] = next;
   } else {
-    const current = Number(ui.extras[id] || 0);
-    ui.extras[id] = Math.max(0, current + dir);
+    const current = Number(ui.extras[id] ?? 0);
+    let min = 0;
+    let max = 99;
+    if (ui.match) {
+      try {
+        const form = schema(ui.match, { ...ui.extras, total: ui.typed });
+        const field = (form.fields || []).find((item) => item.id === id);
+        if (field?.min != null) min = field.min;
+        if (field?.max != null) max = field.max;
+      } catch { /* keep the wide range if the form cannot be read */ }
+    }
+    ui.extras[id] = Math.max(min, Math.min(max, current + dir));
   }
   render();
 }
@@ -588,7 +598,7 @@ function fieldsFor(meta) {
     doubles: [toggle("bull", "Finish on the inner bull")],
     random: [select("preset", "Preset", [["random", "Random finishes"], ["bracket", "Bracket points"]]), select("budget", "Darts allowed", [["3", "3"], ["6", "6"], ["9", "9"]]), select("outRule", "Out", [["double", "Double"], ["straight", "Straight"], ["master", "Master"]]), select("rounds", "Rounds", nums([5, 8, 10, 12])), toggle("shared", "Same target for the round")],
     clock: [select("filter", "Segments", [["any", "Any segment"], ["single", "Singles only"], ["double", "Doubles only"], ["treble", "Trebles only"]]), select("bull", "Bull", [["off", "No bull"], ["either", "Either bull"], ["inner", "Inner bull"]]), toggle("skip", "Multiplier skip"), toggle("equalTurn", "Equal turns"), toggle("descending", "Descending")],
-    ladder: [select("attempts", "Attempts each", nums([4, 8, 10, 12]))],
+    ladder: [select("attempts", "Attempts each", nums([4, 8, 10, 12])), select("safehouse", "Safehouse", [["three", "After a 3-dart checkout"], ["any", "After each checkout"]])],
     shanghai: [select("length", "Rounds", [["7", "1 to 7"], ["20", "1 to 20"]]), toggle("requireNumber", "Halve a complete miss"), toggle("requireTreble", "Reset if no treble")],
     killer: [`<label class="field">Numbers, optional<input class="texty" data-field="numbersText" placeholder="Leave blank to deal them" value="${esc(ui.draft.numbersText || "")}"></label>`],
   };
