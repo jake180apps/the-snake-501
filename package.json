@@ -1,0 +1,8 @@
+{
+  "name": "the-snake-501",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test": "node --test"
+  }
+}
