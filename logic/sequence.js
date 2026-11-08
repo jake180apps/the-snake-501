@@ -1,7 +1,7 @@
 /** Apply a visit under independent in and out rules. */
 
 import { dartPoints, isDouble, isPossibleVisit, isTreble, normaliseDart } from "./darts.js";
-import { bustsOnLeave, finishOk } from "./checkout.js";
+import { bustsOnLeave, canCheckout, finishOk } from "./checkout.js";
 
 export function scoreSequence(startRemaining, startOpened, darts, inRule, outRule) {
   let remaining = startRemaining;
@@ -144,17 +144,8 @@ export function planTotal(options) {
 }
 
 function planCheckout(options, startRemaining, startOpened, dartsUsed, total, outRule) {
-  if (outRule !== "straight") {
-    if (!options.finish) throw new Error("Choose the finishing dart");
-    const finish = normaliseDart(options.finish);
-    if (!finishOk(finish, outRule)) throw new Error("That finish is not allowed");
-    const finishPoints = dartPoints(finish);
-    const setup = total - finishPoints;
-    if (setup < 0) throw new Error("The finishing dart is bigger than the score");
-    if (setup === 0 && dartsUsed < 1) throw new Error("Those darts cannot finish there");
-    if (setup > 0 && (dartsUsed < 2 || !isPossibleVisit(setup, dartsUsed - 1))) {
-      throw new Error("Those darts cannot finish on that double");
-    }
+  if (!canCheckout(total, dartsUsed, outRule)) {
+    throw new Error("That total cannot check out with those darts");
   }
   const attempt = attemptsFor(options, true, outRule);
   return {
@@ -164,7 +155,7 @@ function planCheckout(options, startRemaining, startOpened, dartsUsed, total, ou
     opened: true,
     points: startRemaining,
     dartsUsed,
-    credited: spread(startRemaining, dartsUsed, outRule === "straight" ? null : dartPoints(options.finish)),
+    credited: spread(startRemaining, dartsUsed, null),
     ...attempt,
   };
 }

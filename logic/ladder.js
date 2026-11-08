@@ -259,18 +259,14 @@ export function aim(view, rand) {
   return { type: "number", multiplier: bot.level >= 8 ? 3 : 1, value: 20 };
 }
 
-export function schema(view, draft) {
-  const row = view.raw.rows[view.raw.active];
-  const fields = [{ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 }];
-  if (Number(draft?.total) === row.remaining) {
-    fields.push({
-      id: "finish",
-      type: "select",
-      label: "Finishing double",
-      options: [20, 16, 10, 8, 4].filter((n) => n * 2 <= row.remaining).map((n) => ({ id: `D${n}`, label: `D${n}`, dart: { type: "number", multiplier: 2, value: n } })).concat([{ id: "Bull", label: "Bull", dart: { type: "inner" } }]),
-    });
-  }
-  return { fields, common: [26, 41, 45, 60, 81, 85, 100, 140], miss: true, bust: true, placeholder: "Points that count" };
+export function schema() {
+  return {
+    fields: [{ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 }],
+    common: [26, 41, 45, 60, 81, 85, 100, 140],
+    miss: true,
+    bust: true,
+    placeholder: "Points that count",
+  };
 }
 
 export function step(state) {

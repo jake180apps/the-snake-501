@@ -1,5 +1,6 @@
 import { act, addDarts, addTyped, botThrow, create, project, schema, undo } from "./logic/index.js";
 import { rulesText } from "./logic/index.js";
+import { mountEnglish } from "./english-app.js";
 
 const PREFIX = "snake501.";
 const BOARD = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
@@ -62,6 +63,7 @@ function boot() {
 }
 
 function onClick(event) {
+  if (event.target.closest(".english-root")) return;
   const button = event.target.closest("[data-action]");
   if (!button) return;
   const action = button.dataset.action;
@@ -108,6 +110,7 @@ function run(action, data) {
 }
 
 function onInput(event) {
+  if (event.target.closest(".english-root")) return;
   const input = event.target;
   if (input.dataset.player != null) {
     ui.draft.players[Number(input.dataset.player)].name = input.value;
@@ -132,6 +135,7 @@ function onInput(event) {
 }
 
 function onKey(event) {
+  if (document.getElementById("english-root")) return;
   if (ui.screen !== "live" || ui.input !== "total") return;
   if (event.key >= "0" && event.key <= "9") { typeDigit(event.key); event.preventDefault(); }
   if (event.key === "Backspace") { ui.typed = ui.typed.slice(0, -1); render(); }
@@ -140,6 +144,13 @@ function onKey(event) {
 
 function openSetup(mode) {
   ui.mode = mode;
+  if (mode === "english") {
+    ui.match = null;
+    ui.screen = "setup";
+    ui.englishAutostart = false;
+    render();
+    return;
+  }
   ui.draft = loadDraft(mode);
   fitPlayers();
   ui.screen = "setup";
@@ -148,6 +159,13 @@ function openSetup(mode) {
 
 function quick(mode) {
   ui.mode = mode;
+  if (mode === "english") {
+    ui.match = null;
+    ui.screen = "live";
+    ui.englishAutostart = true;
+    render();
+    return;
+  }
   ui.draft = loadDraft(mode);
   fitPlayers();
   try {
@@ -470,6 +488,12 @@ function metaOf(id) {
 }
 
 function render() {
+  applyOrientation();
+  if (ui.mode === "english" && ui.screen !== "home") {
+    ensureEnglish();
+    return;
+  }
+  teardownEnglish();
   const body = ui.screen === "home" ? renderHome()
     : ui.screen === "setup" ? renderSetup()
       : renderMatch();
@@ -691,6 +715,84 @@ function renderFields(form) {
   }).join("");
 }
 
+function desiredOrientation() {
+  if (ui.mode === "cricket" && ui.screen !== "home") return "portrait";
+  return "landscape";
+}
+
+function applyOrientation() {
+  const target = desiredOrientation();
+  document.documentElement.dataset.lock = target;
+  const orientation = globalThis.screen?.orientation;
+  if (!orientation?.lock) return;
+  if (ui.lockedOrientation === target) return;
+  ui.lockedOrientation = target;
+  orientation.lock(target).catch(() => {
+    ui.lockedOrientation = null;
+  });
+}
+
+function ensureEnglish() {
+  if (ui.englishDestroy && document.getElementById("english-root")) return;
+  teardownEnglish();
+  app.innerHTML = `<div class="english-root" id="english-root"></div>`;
+  ui.englishDestroy = mountEnglish(document.getElementById("english-root"), {
+    autostart: !!ui.englishAutostart,
+    initialInner() {
+      if (ui.screen !== "live" || ui.match?.mode !== "english") return null;
+      return ui.match.match || null;
+    },
+    loadSetup() {
+      return read(PREFIX + "settings.english");
+    },
+    saveSetup(data) {
+      write(PREFIX + "settings.english", data);
+    },
+    loadMatch() {
+      if (ui.saved?.mode !== "english") return null;
+      return ui.saved.match?.match || null;
+    },
+    saveMatch(inner) {
+      storeEnglish(inner);
+    },
+    onModes() {
+      ui.modal = null;
+      ui.englishAutostart = false;
+      ui.screen = "home";
+      teardownEnglish();
+      render();
+    },
+  });
+  ui.englishAutostart = false;
+  wake();
+}
+
+function teardownEnglish() {
+  if (!ui.englishDestroy) return;
+  ui.englishDestroy();
+  ui.englishDestroy = null;
+}
+
+function storeEnglish(inner) {
+  if (!inner) {
+    localStorage.removeItem(PREFIX + "match");
+    ui.saved = null;
+    ui.match = null;
+    if (ui.screen === "live") ui.screen = "setup";
+    return;
+  }
+  ui.match = {
+    v: 1,
+    mode: "english",
+    rngSeed: ui.match?.rngSeed || 1,
+    match: inner,
+    botOf: ui.match?.botOf || {},
+  };
+  ui.mode = "english";
+  ui.screen = "live";
+  saveMatch();
+}
+
 function renderBoard(view) {
   if (!view.canThrow) return `<p class="muted">The board is waiting.</p>`;
   const wedges = BOARD.map((value, index) => ["double", "outer", "treble", "inner"].map((ring) => {
@@ -710,7 +812,13 @@ function renderBoard(view) {
       <circle cx="0" cy="0" r="0.18" fill="#2e9bdb" data-action="face" data-face="outer"></circle>
       <circle cx="0" cy="0" r="0.08" fill="#f4f7fb" data-action="face" data-face="inner"></circle>
       ${labels}</svg>
-    <div class="row" style="flex-direction:column">${renderDarts(view)}</div></div>`;
+    <div class="board-side">
+      <div class="mults">${[1, 2, 3].map((mult) => `<button class="mult ${ui.mult === mult ? "on" : ""}" data-action="mult" data-value="${mult}">${["S", "D", "T"][mult - 1]}</button>`).join("")}</div>
+      <button class="ghost" data-action="face" data-face="outer">25</button>
+      <button class="ghost" data-action="face" data-face="inner">Bull</button>
+      <button class="ghost" data-action="face" data-face="miss">Miss</button>
+      <button class="primary" data-action="confirm-darts">Enter</button>
+    </div></div>`;
 }
 
 function wedge(index, inner, outer) {

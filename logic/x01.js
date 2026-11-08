@@ -1,7 +1,7 @@
 /** X01 with independent in/out rules, legs, sets, teams, and typed visits. */
 
 import { dartLabel, dartPoints, normaliseDart } from "./darts.js";
-import { finishChoices, suggestCheckout } from "./checkout.js";
+import { suggestCheckout } from "./checkout.js";
 import { makeSeed } from "./bot.js";
 import { makeSides, memberOn } from "./roster.js";
 import { planTotal, scoreSequence } from "./sequence.js";
@@ -473,21 +473,11 @@ export function schema(view, draft) {
     });
   }
   fields.push({ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 });
-  const total = Number(draft?.total);
-  const openedNow = view.raw.opened || draft?.didOpen || view.raw.inRule === "straight";
-  if (Number.isInteger(total) && openedNow && total === view.raw.remaining && total > 0 && view.raw.outRule !== "straight") {
-    fields.push({
-      id: "finish",
-      type: "select",
-      label: "Finishing dart",
-      options: finishChoices(view.raw.outRule, total, draft?.dartsUsed || 3),
-    });
-  }
   if (view.raw.outRule === "double") {
     fields.push({
       id: "doubles",
       type: "select",
-      label: "Winning doubles aimed at",
+      label: "Darts at a double",
       options: [
         { id: "na", label: "Not tracked" },
         { id: "0", label: "0" },

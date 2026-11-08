@@ -267,12 +267,14 @@ export function aim(view, rand) {
   return { type: "number", multiplier: (view.botLevel || 1) >= 8 ? 3 : 1, value: 20 };
 }
 
-export function schema(view, draft) {
-  const fields = [{ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 }];
-  if (Number(draft?.total) === view.raw.remaining && view.raw.outRule !== "straight") {
-    fields.unshift({ id: "finish", type: "select", label: "Finishing dart", options: [{ id: "D20", label: "D20", dart: { type: "number", multiplier: 2, value: 20 } }, { id: "Bull", label: "Bull", dart: { type: "inner" } }] });
-  }
-  return { fields, common: false, miss: true, bust: true, placeholder: "Points scored" };
+export function schema() {
+  return {
+    fields: [{ id: "dartsUsed", type: "step", label: "Darts thrown", min: 1, max: 3 }],
+    common: false,
+    miss: true,
+    bust: true,
+    placeholder: "Points scored",
+  };
 }
 
 export function rulesText(config = {}) {

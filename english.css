@@ -1,0 +1,1582 @@
+.english-root {
+  --bg: #0b0b10;
+  --panel: #16181f;
+  --panel-bat: #1c2030;
+  --panel-bowl: #121820;
+  --line: #2a3550;
+  --text: #f4f7fb;
+  --muted: #b7c4d6;
+  --gold: #7ec8f0;
+  --lime: #2e9bdb;
+  --lime-ink: #071018;
+  --wicket: #ff6b63;
+  --bowl: #9fd4ef;
+  --pad: #10131a;
+  --key: #1c2030;
+  --key-line: #2a3550;
+  --tap: 52px;
+  color-scheme: dark;
+  font-family: Roboto, "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+  height: 100%;
+  min-height: 0;
+  color: var(--text);
+  background:
+    radial-gradient(900px 420px at 50% -12%, #102033 0%, transparent 58%),
+    var(--bg);
+}
+.english-root, .english-root * { box-sizing: border-box; }
+.english-root button, .english-root input { font: inherit; color: inherit; }
+.english-root button { cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+.english-root img { display: block; }
+.english-root h1, .english-root h2, .english-root p { margin: 0; }
+
+.english-root .screen {
+  height: 100%;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.8dvh, 8px);
+  padding: clamp(6px, 1.1dvh, 10px);
+  padding-top: max(6px, env(safe-area-inset-top));
+  padding-right: max(6px, env(safe-area-inset-right));
+  padding-bottom: max(6px, env(safe-area-inset-bottom));
+  padding-left: max(6px, env(safe-area-inset-left));
+}
+
+.english-root .screen-setup,
+.english-root .screen-break,
+.english-root .screen-result {
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+
+.english-root .screen-live {
+  --tap: clamp(34px, 5.4dvh, 48px);
+  height: 100%;
+  max-height: 100%;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.english-root .pad,
+.english-root .card,
+.english-root .throwbar,
+.english-root .topbar,
+.english-root .choice,
+.english-root .slots,
+.english-root .stage {
+  user-select: none;
+}
+
+.english-root :focus {
+  outline: none;
+}
+
+.english-root :focus-visible {
+  outline: 3px solid var(--lime);
+  outline-offset: 2px;
+}
+
+.english-root .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.english-root .noscript {
+  padding: 24px;
+  font-size: 1.2rem;
+}
+
+.english-root .topbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  min-height: var(--tap);
+}
+
+.english-root .brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.english-root .brand img {
+  width: 36px;
+  height: 36px;
+  border-radius: 8px;
+}
+
+.english-root .brand-name {
+  font-weight: 800;
+  font-size: 1.05rem;
+  letter-spacing: 0.01em;
+}
+
+.english-root .brand-sub {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.english-root .top-actions {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+}
+
+.english-root .texty,
+.english-root .primary,
+.english-root .choice button,
+.english-root .mult,
+.english-root .num,
+.english-root .actions button {
+  min-height: var(--tap);
+}
+
+.english-root .texty {
+  padding: 0 14px;
+  border-radius: 12px;
+  background: transparent;
+  border: 1px solid var(--key-line);
+  color: var(--text);
+  font-weight: 700;
+}
+
+.english-root .primary {
+  min-height: 56px;
+  border: 0;
+  border-radius: 14px;
+  background: var(--lime);
+  color: var(--lime-ink);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 0 18px;
+}
+
+.english-root button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.english-root button.primary:disabled {
+  opacity: 1;
+  background: #16181f;
+  color: #b7c4d6;
+  border: 1px solid var(--key-line);
+}
+
+.english-root .setup-grid {
+  width: min(1040px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: 22px;
+  flex: 1;
+  align-content: center;
+}
+
+.english-root .setup-intro h1,
+.english-root .stage h1 {
+  font-size: clamp(2.4rem, 6vw, 4.6rem);
+  line-height: 0.95;
+  letter-spacing: -0.03em;
+  font-weight: 800;
+}
+
+.english-root .setup-intro {
+  display: grid;
+  gap: 8px;
+  align-content: start;
+}
+
+.english-root .setup-intro img {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+}
+
+.english-root .setup-intro p,
+.english-root .stage-copy {
+  color: var(--muted);
+  font-size: 1.05rem;
+  line-height: 1.4;
+  max-width: 38rem;
+}
+
+.english-root .setup-form {
+  display: grid;
+  gap: 14px;
+}
+
+.english-root .field {
+  display: grid;
+  gap: 6px;
+  font-weight: 700;
+}
+
+.english-root .field input {
+  width: 100%;
+  min-height: 56px;
+  border-radius: 12px;
+  border: 1px solid var(--key-line);
+  background: #10131a;
+  padding: 0 14px;
+  font-size: 1.15rem;
+}
+
+.english-root fieldset {
+  border: 0;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 8px;
+}
+
+.english-root legend {
+  font-weight: 800;
+  padding: 0;
+}
+
+.english-root .choice {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.english-root .choice-3 {
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.english-root .choice button {
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--key-line);
+  font-weight: 800;
+  font-size: 1.15rem;
+  padding: 8px 10px;
+  min-width: 0;
+}
+
+.english-root .choice button small {
+  display: block;
+  margin-top: 2px;
+  font-weight: 700;
+  font-size: 0.78rem;
+  letter-spacing: 0.02em;
+  opacity: 0.75;
+}
+
+.english-root .choice button.is-on,
+.english-root .mult.is-on {
+  background: var(--lime);
+  color: var(--lime-ink);
+  border-color: var(--lime);
+}
+
+.english-root .choice button.is-on small {
+  opacity: 0.8;
+}
+
+.english-root .choice-name {
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.english-root .offer {
+  display: grid;
+  gap: 8px;
+  background: #16181f;
+  border: 1px solid var(--lime);
+  border-radius: 16px;
+  padding: 12px;
+}
+
+.english-root .offer-kicker {
+  color: var(--lime);
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.english-root .offer-actions,
+.english-root .stage-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.english-root .offer-actions .primary,
+.english-root .stage-actions .primary {
+  flex: 1 1 180px;
+}
+
+.english-root .play {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.7dvh, 8px);
+  min-height: 0;
+  overflow: hidden;
+}
+
+.english-root .score-col {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.7dvh, 8px);
+  min-width: 0;
+  min-height: 0;
+}
+
+.english-root .cards,
+.english-root .result-scores,
+.english-root .mini-scores {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.english-root .card {
+  background: #16181f;
+  border: 1px solid #2a3550;
+  border-radius: 16px;
+  padding: 10px 12px 12px;
+  min-width: 0;
+  container-type: inline-size;
+}
+
+.english-root .card.is-throwing.is-batting,
+.english-root .card.is-winner {
+  background: var(--panel-bat);
+  border-color: var(--gold);
+  box-shadow: inset 0 0 0 2px var(--gold);
+}
+
+.english-root .card.is-winner {
+  border-color: var(--lime);
+  box-shadow: inset 0 0 0 2px var(--lime);
+}
+
+.english-root .card.is-throwing.is-bowling {
+  background: var(--panel-bowl);
+  border-color: var(--bowl);
+  box-shadow: inset 0 0 0 2px var(--bowl);
+}
+
+.english-root .card-top {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+.english-root .side-name,
+.english-root .throw-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+
+.english-root .side-name {
+  font-size: 1rem;
+  font-weight: 800;
+  flex: 1;
+}
+
+.english-root .role {
+  flex: none;
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.english-root .role-bat {
+  background: #1c4384;
+  color: #f4f7fb;
+}
+
+.english-root .role-bowl {
+  background: #1c4384;
+  color: #f4f7fb;
+}
+
+.english-root .scoreline {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.english-root .score {
+  font-size: clamp(1.7rem, min(20cqi, 7.2dvh), 4.4rem);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.85;
+  margin: 2px 0;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .pending {
+  margin-bottom: 6px;
+  background: var(--lime);
+  color: var(--lime-ink);
+  border-radius: 10px;
+  padding: 4px 8px 5px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.english-root .pending-label {
+  display: block;
+  margin-top: 3px;
+  font-size: 0.65rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.english-root .caption,
+.english-root .wicket-count,
+.english-root .quiet {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.english-root .wickets {
+  margin-top: 8px;
+}
+
+.english-root .pips {
+  display: flex;
+  gap: 3px;
+  height: clamp(12px, 2.6dvh, 24px);
+  align-items: flex-end;
+}
+
+.english-root .pip {
+  flex: 1 1 6px;
+  max-width: 16px;
+  height: 100%;
+  border-radius: 2px 2px 1px 1px;
+  background: linear-gradient(#9fd4ef, #2e9bdb 55%, #1c4384);
+}
+
+.english-root .pip.is-down {
+  height: 38%;
+  background: #2a1818;
+  box-shadow: inset 0 0 0 1px #6a3838;
+}
+
+.english-root .wicket-count {
+  margin-top: 4px;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .throwing-flag {
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lime);
+}
+
+.english-root .card.is-bowling .throwing-flag {
+  color: var(--bowl);
+}
+
+.english-root .toss {
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.english-root .chase {
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.english-root .chase-main {
+  font-size: clamp(1.15rem, 2.4vw, 1.6rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+
+.english-root .chase-sub {
+  margin-top: 2px;
+  font-weight: 700;
+}
+
+.english-root .chase.is-behind {
+  background: #16181f;
+  border: 1px solid var(--line);
+}
+
+.english-root .chase.is-level {
+  background: #102033;
+  color: #d6eeff;
+}
+
+.english-root .chase.is-ahead {
+  background: var(--lime);
+  color: var(--lime-ink);
+}
+
+.english-root .chase.is-ahead .chase-sub {
+  color: #071018;
+}
+
+.english-root .throwbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  border-radius: 14px;
+  background: var(--panel);
+  border: 1px solid var(--line);
+}
+
+.english-root .throwbar.is-batting {
+  border-color: var(--gold);
+}
+
+.english-root .throwbar.is-bowling {
+  border-color: var(--bowl);
+}
+
+.english-root .eyebrow {
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.72rem;
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.english-root .throw-name {
+  font-size: clamp(1.15rem, min(4vw, 4.6dvh), 2rem);
+  font-weight: 800;
+  line-height: 1.05;
+  margin-top: 2px;
+}
+
+.english-root .darts-left {
+  margin-left: auto;
+  text-align: right;
+  flex: none;
+}
+
+.english-root .darts-left p {
+  margin-top: 4px;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .dart-pips {
+  display: flex;
+  justify-content: flex-end;
+  gap: 6px;
+}
+
+.english-root .dart-pip {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  border: 2px solid #f4f7fb;
+}
+
+.english-root .dart-pip.is-used {
+  background: var(--lime);
+  border-color: var(--lime);
+}
+
+.english-root .throwbar.is-bowling .dart-pip.is-used {
+  background: var(--bowl);
+  border-color: var(--bowl);
+}
+
+.english-root .visitbox {
+  background: #10131a;
+  border: 1px solid #2a3550;
+  border-radius: 14px;
+  padding: 8px;
+}
+
+.english-root .slots {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.english-root .slot {
+  min-height: 0;
+  border-radius: 12px;
+  border: 1px dashed #2a3550;
+  background: #0b0b10;
+  padding: clamp(4px, 0.7dvh, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.english-root .slot.is-score {
+  border-style: solid;
+  border-color: #1a9be0;
+  background: #102033;
+}
+
+.english-root .slot.is-wicket {
+  border-style: solid;
+  border-color: #8f3d38;
+  background: #2c1616;
+}
+
+.english-root .slot.is-offtarget,
+.english-root .slot.is-miss {
+  border-style: solid;
+  border-color: #2a3550;
+}
+
+.english-root .slot-index,
+.english-root .slot-note,
+.english-root .slot-empty {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.english-root .slot-label {
+  font-size: clamp(1.05rem, 2vw, 1.35rem);
+  font-weight: 800;
+  line-height: 1.1;
+}
+
+.english-root .slot.is-wicket .slot-note {
+  color: #ffd0cb;
+}
+
+.english-root .maths {
+  margin-top: 8px;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .maths strong {
+  font-size: 1.35rem;
+  color: var(--lime);
+}
+
+.english-root .maths.bowler strong {
+  color: #ffb4ae;
+}
+
+.english-root .last-visit {
+  margin-top: 4px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.english-root .hint {
+  margin: 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+  line-height: 1.3;
+  font-weight: 700;
+}
+
+.english-root .pad-col {
+  container-type: inline-size;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(4px, 0.7dvh, 8px);
+  min-width: 0;
+  min-height: 0;
+  flex: 1;
+}
+
+.english-root .pad {
+  background: var(--pad);
+  border: 1px solid #2a3550;
+  border-radius: 16px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.english-root .pad[data-mult="2"] {
+  box-shadow: inset 0 0 0 3px var(--gold);
+}
+
+.english-root .pad[data-mult="3"] {
+  box-shadow: inset 0 0 0 3px #2e9bdb;
+}
+
+.english-root .mults,
+.english-root .nums,
+.english-root .actions {
+  display: grid;
+  gap: 8px;
+}
+
+.english-root .mults {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.english-root .nums {
+  grid-template-columns: repeat(5, 1fr);
+}
+
+.english-root .actions {
+  grid-template-columns: 1.35fr 1.35fr 0.8fr 0.8fr;
+}
+
+.english-root .pad button {
+  border-radius: 12px;
+  background: var(--key);
+  border: 1px solid var(--key-line);
+  color: var(--text);
+  font-weight: 800;
+}
+
+.english-root .mult {
+  font-size: 1rem;
+}
+
+.english-root .num {
+  min-height: 56px;
+  font-size: clamp(1.2rem, 2.5vw, 1.8rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .ntag {
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+  color: var(--gold);
+  margin-bottom: 2px;
+}
+
+.english-root .pad[data-mult="3"] .ntag {
+  color: #9fd4ef;
+}
+
+.english-root .bull {
+  font-size: 0.98rem;
+  line-height: 1.1;
+  padding: 4px 6px;
+}
+
+.english-root .bull span {
+  display: block;
+  margin-top: 2px;
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #f4f7fb;
+}
+
+.english-root .bull-outer {
+  background: #102033;
+  border-color: #2e9bdb;
+}
+
+.english-root .bull-inner {
+  background: #3a1c1c;
+  border-color: #a3504c;
+}
+
+.english-root .pad.is-bowling .num {
+  background: #121820;
+  color: #f4f7fb;
+}
+
+.english-root .pad.is-bowling .bull-outer {
+  box-shadow: 0 0 0 3px var(--gold);
+}
+
+.english-root .pad.is-bowling .bull-inner {
+  box-shadow: 0 0 0 3px var(--wicket);
+}
+
+.english-root button[data-action="undo"] {
+  background: #1a242c;
+  border-color: #41586a;
+  color: #e7f3fb;
+}
+
+.english-root button[data-action="miss"] {
+  background: #121820;
+}
+
+.english-root .stage {
+  width: min(880px, 100%);
+  margin: 0 auto;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 10px;
+}
+
+.english-root .stage-name {
+  font-size: clamp(1.4rem, 3vw, 2rem);
+  font-weight: 800;
+}
+
+.english-root .stage-lead {
+  font-size: clamp(1.3rem, 3vw, 2rem);
+  font-weight: 800;
+  color: var(--gold);
+}
+
+.english-root .mini-scores .card .score,
+.english-root .result-scores .score {
+  font-size: clamp(2.4rem, 8vw, 4.5rem);
+}
+
+.english-root .overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 20;
+  background: rgba(6, 10, 8, 0.72);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 12px;
+  padding-bottom: max(12px, env(safe-area-inset-bottom));
+}
+
+.english-root .sheet {
+  width: min(640px, 100%);
+  max-height: min(860px, calc(100dvh - 24px));
+  overflow: auto;
+  background: #16181f;
+  border: 1px solid var(--key-line);
+  border-radius: 18px;
+  padding: 16px;
+}
+
+.english-root .sheet-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.english-root .sheet h2 {
+  font-size: 1.6rem;
+}
+
+.english-root .rules-body {
+  display: grid;
+  gap: 12px;
+  color: var(--text);
+  font-size: 1rem;
+  line-height: 1.45;
+}
+
+.english-root .rules-body h3 {
+  margin: 0 0 4px;
+  font-size: 1.05rem;
+}
+
+.english-root .rules-body p,
+.english-root .rules-body ul {
+  margin: 0;
+}
+
+.english-root .rules-body ul {
+  padding-left: 1.2rem;
+}
+
+.english-root .rules-body li + li {
+  margin-top: 4px;
+}
+
+.english-root .confirm-copy {
+  color: var(--muted);
+  margin: 6px 0 14px;
+  line-height: 1.4;
+}
+
+.english-root .confirm-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.english-root .confirm-actions .primary,
+.english-root .confirm-actions .texty {
+  flex: 1 1 140px;
+}
+
+@media (orientation: landscape) and (min-width: 840px) {
+
+  .english-root .setup-grid {
+    grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.15fr);
+    align-items: center;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 640px) {
+
+  .english-root .play {
+    display: grid;
+    grid-template-columns: minmax(0, 1.05fr) minmax(280px, 0.95fr);
+    grid-template-rows: minmax(0, 1fr);
+    gap: clamp(4px, 1vh, 8px);
+    align-items: stretch;
+  }
+
+  .english-root .pad-col {
+    display: flex;
+    flex-direction: column;
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .english-root .pad,
+.english-root .typed-form {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .english-root .nums {
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+
+  .english-root .num,
+.english-root .mult,
+.english-root .actions button {
+    height: 100%;
+    min-height: 0;
+  }
+
+  .english-root .cards {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .english-root .card {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+  }
+}
+
+@media (orientation: portrait) {
+
+  .english-root .play {
+    display: grid;
+    grid-template-rows: minmax(0, 1fr) minmax(200px, 1.05fr);
+    min-height: 0;
+  }
+
+  .english-root .score-col,
+.english-root .pad-col {
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .english-root .pad-col {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .english-root .pad,
+.english-root .typed-form {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .english-root .nums {
+    flex: 1;
+    min-height: 0;
+    grid-template-rows: repeat(4, minmax(0, 1fr));
+  }
+
+  .english-root .screen-live .num,
+.english-root .screen-live .mult,
+.english-root .screen-live .actions button {
+    min-height: 0;
+    height: 100%;
+  }
+}
+
+@media (orientation: portrait) and (max-width: 640px) {
+
+  .english-root .screen-live .actions {
+    grid-template-columns: 1.15fr 1.15fr 0.72fr 0.72fr;
+  }
+
+  .english-root .screen-live .bull {
+    font-size: 0.78rem;
+  }
+
+  .english-root .screen-live .bull span {
+    font-size: 0.68rem;
+  }
+}
+
+@media (orientation: portrait) and (max-height: 1000px) {
+
+  .english-root .cards {
+    flex: none;
+  }
+}
+
+@media (max-width: 560px) {
+
+  .english-root .choice-3 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 420px) {
+
+  .english-root .screen-live .brand img,
+.english-root .screen-break .brand img,
+.english-root .screen-result .brand img {
+    display: none;
+  }
+}
+
+@media (max-height: 620px) {
+
+  .english-root .screen {
+    gap: 6px;
+    padding: 6px;
+  }
+
+  .english-root .hint {
+    font-size: 0.82rem;
+  }
+
+  .english-root .screen-live .slot {
+    min-height: 0;
+    padding: 4px 6px;
+  }
+
+  .english-root .screen-live .score {
+    font-size: clamp(1.45rem, min(16cqi, 6.4dvh), 3rem);
+  }
+
+  .english-root .setup-intro img {
+    width: 48px;
+    height: 48px;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+
+  .english-root .pad button:active,
+.english-root .primary:active,
+.english-root .choice button:active,
+.english-root .texty:active {
+    transform: translateY(1px);
+  }
+}
+
+@media (hover: hover) {
+
+  .english-root .pad button:hover,
+.english-root .texty:hover,
+.english-root .choice button:hover {
+    filter: brightness(1.08);
+  }
+
+.english-root .mult.is-on:hover,
+.english-root .choice button.is-on:hover,
+.english-root .primary:hover {
+    filter: brightness(0.97);
+  }
+}
+
+.english-root .brand {
+  flex: 1;
+}
+
+.english-root .brand > div {
+  min-width: 0;
+}
+
+.english-root .brand-name,
+.english-root .brand-sub {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.english-root .top-actions {
+  flex: none;
+}
+
+.english-root .setup-intro h1 {
+  font-size: clamp(1.8rem, 4.6vw, 3.2rem);
+}
+
+.english-root .optional {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.english-root .team-pair {
+  display: grid;
+  gap: 10px;
+}
+
+.english-root .team-block {
+  display: grid;
+  gap: 8px;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--key-line);
+  border-radius: 14px;
+  background: #16181f;
+}
+
+.english-root .throw-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.english-root .throw-team,
+.english-root .active-player,
+.english-root .innings-split {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.english-root .active-player,
+.english-root .innings-split,
+.english-root .throw-team {
+  font-weight: 800;
+  font-size: 0.85rem;
+}
+
+.english-root .active-player {
+  color: var(--gold);
+}
+
+.english-root .card.is-bowling .active-player,
+.english-root .throw-team {
+  color: var(--bowl);
+}
+
+.english-root .innings-split,
+.english-root .throw-team {
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .declare-btn {
+  flex: none;
+  min-height: 40px;
+  padding: 0 10px;
+}
+
+.english-root .end-match {
+  display: block;
+  width: 100%;
+  margin-top: 8px;
+  min-height: 42px;
+  border: 0;
+  border-radius: 12px;
+  background: #071018;
+  color: #f4f7fb;
+  font-weight: 800;
+  font-size: 1rem;
+}
+
+.english-root .pad-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px 8px;
+  min-height: 0;
+}
+
+.english-root .pad-head .hint {
+  flex: 1 1 160px;
+  min-width: 0;
+}
+
+.english-root .mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px;
+  flex: 0 0 auto;
+}
+
+.english-root .mode-toggle button {
+  min-height: 36px;
+  border-radius: 10px;
+  border: 1px solid var(--key-line);
+  background: var(--key);
+  color: var(--text);
+  font-weight: 800;
+  padding: 0 10px;
+}
+
+.english-root .mode-toggle button.is-on {
+  background: var(--lime);
+  color: var(--lime-ink);
+  border-color: var(--lime);
+}
+
+.english-root .screen-live .pad,
+.english-root .screen-live .typed-form {
+  flex: 1;
+  min-height: 0;
+}
+
+.english-root .screen-live .nums {
+  flex: 1;
+  min-height: 0;
+  grid-template-rows: repeat(4, minmax(0, 1fr));
+}
+
+.english-root .screen-live .num,
+.english-root .screen-live .mult,
+.english-root .screen-live .actions button {
+  min-height: 0;
+}
+
+.english-root .typed-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 8px;
+  background: var(--pad);
+  border: 1px solid #2a3550;
+  border-radius: 16px;
+}
+
+.english-root .typed-form input {
+  width: 100%;
+  min-height: 52px;
+  border-radius: 12px;
+  border: 1px solid var(--key-line);
+  background: #10131a;
+  padding: 0 12px;
+  font-size: 1.6rem;
+  font-weight: 800;
+  text-align: center;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .wicket-step {
+  display: grid;
+  grid-template-columns: 52px 1fr 52px;
+  gap: 8px;
+  align-items: center;
+}
+
+.english-root .wicket-step button {
+  min-height: 48px;
+  border-radius: 12px;
+  border: 1px solid var(--key-line);
+  background: var(--key);
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.english-root .wicket-step p {
+  text-align: center;
+}
+
+.english-root .wicket-step strong {
+  display: block;
+  font-size: 1.35rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .typed-preview {
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .typed-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: auto;
+}
+
+.english-root .typed-actions .primary {
+  flex: 1;
+}
+
+.english-root .slots-typed {
+  grid-template-columns: 1fr;
+}
+
+.english-root .averages {
+  display: grid;
+  gap: 8px;
+}
+
+.english-root .averages h2,
+.english-root .avg-kicker {
+  font-size: 1rem;
+  font-weight: 800;
+}
+
+.english-root .avg-kicker {
+  margin: 4px 0 0;
+}
+
+.english-root .avg-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.english-root .avg-card {
+  min-width: 0;
+  background: #16181f;
+  border: 1px solid #2a3550;
+  border-radius: 14px;
+  padding: 10px 12px;
+}
+
+.english-root .avg-card.is-team {
+  border-color: var(--gold);
+}
+
+.english-root .avg-card h3 {
+  margin: 0 0 6px;
+  font-size: 1rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.english-root .avg-line {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 0.92rem;
+}
+
+.english-root .avg-line strong {
+  font-variant-numeric: tabular-nums;
+}
+
+.english-root .avg-note {
+  margin-top: 4px;
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.english-root .screen-live .card {
+  padding: clamp(6px, 0.8dvh, 10px) clamp(8px, 1vw, 12px);
+}
+
+.english-root .screen-live .visitbox,
+.english-root .screen-live .throwbar,
+.english-root .screen-live .chase {
+  padding: clamp(6px, 0.8dvh, 10px) clamp(8px, 1vw, 12px);
+}
+
+@media (min-width: 720px) {
+
+  .english-root .team-pair {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+@media (max-width: 560px) {
+
+  .english-root .avg-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (orientation: portrait) and (max-height: 900px) {
+
+  .english-root .screen-live .hint,
+.english-root .screen-live .throwing-flag,
+.english-root .screen-live .toss,
+.english-root .throwbar .role {
+    display: none;
+  }
+
+  .english-root .screen-live .slot {
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 1px 6px;
+    padding: 4px 6px;
+  }
+
+  .english-root .screen-live .score {
+    font-size: clamp(1.35rem, 14cqi, 2.5rem);
+    margin: 0;
+  }
+
+  .english-root .screen-live .pips {
+    height: 10px;
+  }
+
+  .english-root .screen-live .card,
+.english-root .screen-live .throwbar,
+.english-root .screen-live .visitbox,
+.english-root .screen-live .chase {
+    padding: 5px 8px;
+  }
+
+  .english-root .screen-live .slot {
+    padding: 3px 6px;
+  }
+
+  .english-root .screen-live .slot-label {
+    font-size: 0.95rem;
+  }
+
+  .english-root .screen-live .maths {
+    margin-top: 4px;
+    font-size: 0.92rem;
+  }
+
+  .english-root .screen-live .throw-name {
+    font-size: 1.15rem;
+  }
+
+  .english-root .screen-live .chase-main {
+    font-size: 1rem;
+  }
+
+  .english-root .screen-live .chase-sub {
+    font-size: 0.8rem;
+  }
+
+  .english-root .chase.is-ahead {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: center;
+    column-gap: 8px;
+  }
+
+  .english-root .chase.is-ahead .chase-main {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .english-root .chase.is-ahead .chase-sub {
+    display: none;
+  }
+
+  .english-root .chase.is-ahead .end-match {
+    grid-column: 2;
+    grid-row: 1;
+    width: auto;
+    margin: 0;
+    min-height: 36px;
+    padding: 0 12px;
+  }
+
+  .english-root .screen-live .wickets {
+    margin-top: 4px;
+  }
+}
+
+@media (orientation: portrait) and (max-height: 720px) {
+
+  .english-root .screen-live .pips {
+    display: none;
+  }
+
+  .english-root .screen-live .score-col {
+    gap: 3px;
+  }
+
+  .english-root .screen-live .throwbar,
+.english-root .screen-live .visitbox,
+.english-root .screen-live .chase,
+.english-root .screen-live .card {
+    padding: 4px 6px;
+  }
+
+  .english-root .screen-live .maths,
+.english-root .screen-live .last-visit {
+    margin-top: 2px;
+  }
+}
+
+@media (orientation: landscape) and (max-height: 430px) {
+
+  .english-root .screen-live .hint,
+.english-root .screen-live .brand img,
+.english-root .screen-live .throwing-flag,
+.english-root .screen-live .slot-index,
+.english-root .throwbar .role {
+    display: none;
+  }
+
+  .english-root .eyebrow {
+    white-space: nowrap;
+  }
+
+  .english-root .screen-live .pips {
+    height: 8px;
+  }
+
+  .english-root .screen-live .wicket-count,
+.english-root .screen-live .caption,
+.english-root .screen-live .slot-note {
+    font-size: 0.72rem;
+  }
+
+  .english-root .screen-live .topbar {
+    min-height: 0;
+  }
+
+  .english-root .screen-live .card,
+.english-root .screen-live .throwbar,
+.english-root .screen-live .visitbox,
+.english-root .screen-live .chase,
+.english-root .screen-live .pad {
+    padding: 4px 6px;
+  }
+
+  .english-root .mode-toggle button,
+.english-root .declare-btn {
+    min-height: 32px;
+  }
+}
+
+.english-root .screen-live {
+  display: flex;
+  grid-template-columns: none;
+  grid-template-rows: none;
+}
+.english-root .brand img,
+.english-root .setup-intro img {
+  border-radius: 12px;
+  object-fit: cover;
+}

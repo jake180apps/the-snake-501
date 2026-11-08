@@ -137,11 +137,13 @@ describe("x01 scoring", () => {
     assert.equal(project(after).raw.remaining, 16);
   });
 
-  it("asks rather than guessing a typed checkout, and rejects 179", () => {
+  it("accepts a typed checkout without naming the finishing dart, and rejects 179", () => {
     const state = match({ start: 101, players: [{ name: "Jake" }] });
     assert.throws(() => typedVisit(state, { total: 179, dartsUsed: 3 }), /impossible/i);
-    assert.throws(() => typedVisit(state, { total: 101, dartsUsed: 3 }), /finishing/i);
-    const done = typedVisit(state, { total: 101, dartsUsed: 3, finish: D(20), doubles: "2" });
+    const stuck = typedVisit(state, { total: 98, dartsUsed: 3 });
+    assert.equal(project(stuck).raw.remaining, 3);
+    assert.throws(() => typedVisit(stuck, { total: 3, dartsUsed: 1 }), /check out/i);
+    const done = typedVisit(state, { total: 101, dartsUsed: 3, doubles: "2" });
     const checked = project(done);
     assert.equal(checked.phase, "done");
     assert.equal(checked.raw.stats[0].doubleHits, 1);

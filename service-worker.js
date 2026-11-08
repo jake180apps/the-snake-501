@@ -1,10 +1,12 @@
-const CACHE = "the-snake-501-v3";
+const CACHE = "the-snake-501-v4";
 
 const ASSETS = [
   "./",
   "./index.html",
   "./styles.css",
   "./app.js",
+  "./english-app.js",
+  "./english.css",
   "./manifest.webmanifest",
   "./logic/bot.js",
   "./logic/checkout.js",
