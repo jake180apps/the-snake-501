@@ -1,4 +1,4 @@
-const CACHE = "the-snake-501-v2";
+const CACHE = "the-snake-501-v3";
 
 const ASSETS = [
   "./",

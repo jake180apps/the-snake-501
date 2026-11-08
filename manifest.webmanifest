@@ -1,9 +1,9 @@
 {
-  "id": "/the-snake-501/",
+  "id": "/the-snake-501/?app=snake-501",
   "name": "The Snake 501",
   "short_name": "Snake 501",
   "description": "Jake's darts scorer. X01, cricket, training and party games, offline.",
-  "start_url": "/the-snake-501/",
+  "start_url": "/the-snake-501/?app=snake-501",
   "scope": "/the-snake-501/",
   "display": "standalone",
   "orientation": "any",

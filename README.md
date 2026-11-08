@@ -34,7 +34,7 @@ Then open [http://127.0.0.1:8747](http://127.0.0.1:8747).
 
 Paths are relative (`./`), so the app can live at `https://username.github.io/repository-name/`. Add the repository as a Pages site from the branch that holds these files. The first visit must be over HTTPS (or localhost) before Chrome will install it and keep the files for offline scoring.
 
-This app uses its own service-worker cache, `the-snake-501-v2`, and stores matches under the `snake501.` localStorage prefix. It will not overwrite a Wickets & Runs scoreboard on the same site.
+This app uses its own service-worker cache, `the-snake-501-v3`, and stores matches under the `snake501.` localStorage prefix. It will not overwrite a Wickets & Runs scoreboard on the same site.
 
 ## On the Honor Pad
 
