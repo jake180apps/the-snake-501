@@ -13,6 +13,9 @@ import {
 } from "./logic/english.js";
 
 export function mountEnglish(root, hooks) {
+  hooks.bind?.({
+    acceptDart(dart) { record(dart); },
+  });
 
 const app = root;
   const liveRegion = document.getElementById("live-region");
@@ -447,6 +450,7 @@ function render() {
     pendingAnnounce = "";
   }
   document.title = screen === "live" ? `${view.throwingName} · English Cricket` : "English Cricket";
+  hooks.afterRender?.();
 }
 
 function screenOf(view) {
@@ -1373,6 +1377,7 @@ function persistMatch() {
   window.addEventListener("keydown", onKey);
   boot();
   return function destroyEnglish() {
+    hooks.bind?.({ acceptDart: null });
     app.removeEventListener("click", onClick);
     app.removeEventListener("input", onInput);
     app.removeEventListener("submit", onSubmit);

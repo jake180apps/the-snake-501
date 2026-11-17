@@ -1,4 +1,4 @@
-const CACHE = "the-snake-501-v5";
+const CACHE = "the-snake-501-v6";
 
 const ASSETS = [
   "./",
@@ -6,6 +6,9 @@ const ASSETS = [
   "./styles.css",
   "./app.js",
   "./english-app.js",
+  "./omni-adapter.js",
+  "./omni-connection.js",
+  "./omni-log.js",
   "./english.css",
   "./manifest.webmanifest",
   "./logic/bot.js",
