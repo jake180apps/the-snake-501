@@ -1,6 +1,9 @@
 import { act, addDarts, addTyped, botThrow, create, project, schema, undo } from "./logic/index.js";
 import { rulesText } from "./logic/index.js";
 import { mountEnglish } from "./english-app.js";
+import { interpret, parse } from "./omni-adapter.js";
+import { OMNI_IN_USE_HINT, OMNI_STORAGE_KEY, createOmniConnection, normaliseOmniSettings } from "./omni-connection.js";
+import { OMNI_LOG_STORAGE_KEY, createOmniLog } from "./omni-log.js";
 
 const PREFIX = "snake501.";
 const BOARD = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
@@ -41,7 +44,17 @@ const ui = {
   holdBot: false,
   pace: "fast",
   timer: 0,
+  omni: null,
+  omniStatus: "disconnected",
+  omniHint: "",
+  omniBoard: "",
+  omniLogOpen: false,
+  omniNoticeShown: false,
 };
+
+let omniLink = null;
+let omniLog = null;
+let restoreOmniField = true;
 
 const app = document.querySelector("#app");
 const liveRegion = document.querySelector("#live-region");
@@ -50,6 +63,10 @@ boot();
 
 function boot() {
   ui.pace = localStorage.getItem(PREFIX + "pace") || "fast";
+  ui.omni = normaliseOmniSettings(read(OMNI_STORAGE_KEY));
+  omniLog = createOmniLog();
+  omniLog.load(read(OMNI_LOG_STORAGE_KEY));
+  omniLink = createOmniConnection({ onStatus: handleOmniStatus, onMessage: handleOmniMessage });
   const saved = read(PREFIX + "match");
   if (saved?.match) {
     ui.saved = saved;
@@ -59,6 +76,7 @@ function boot() {
   app.addEventListener("change", onInput);
   window.addEventListener("keydown", onKey);
   if ("serviceWorker" in navigator) navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  if (ui.omni.enabled) omniLink.start(ui.omni);
   render();
 }
 
@@ -105,6 +123,9 @@ function run(action, data) {
   if (action === "game-action") gameAction(data.id);
   if (action === "bot-go") { ui.holdBot = false; queueBot(); }
   if (action === "pace") { ui.pace = ui.pace === "fast" ? "real" : "fast"; localStorage.setItem(PREFIX + "pace", ui.pace); render(); }
+  if (action === "settings") { ui.modal = null; ui.screen = "settings"; render(); }
+  if (action === "omni-toggle") toggleOmni();
+  if (action === "omni-log") openOmniLog();
   if (action === "rematch") rematch();
   if (action === "setup-return") { ui.screen = "setup"; ui.match = null; render(); }
 }
@@ -132,9 +153,23 @@ function onInput(event) {
     ui.extras[input.dataset.extra] = input.value;
     render();
   }
+  if (input.dataset.omni === "host" || input.dataset.omni === "port" || input.dataset.omni === "path") {
+    ui.omni[input.dataset.omni] = input.value;
+    persistOmniSettings();
+    if (event.type === "change") {
+      restoreOmniField = false;
+      omniLink.start(ui.omni);
+      restoreOmniField = true;
+    }
+  }
 }
 
 function onKey(event) {
+  if (ui.omniLogOpen && event.key === "Escape") {
+    closeOmniLog();
+    event.preventDefault();
+    return;
+  }
   if (document.getElementById("english-root")) return;
   if (ui.screen !== "live" || ui.input !== "total") return;
   if (event.key >= "0" && event.key <= "9") { typeDigit(event.key); event.preventDefault(); }
@@ -499,27 +534,39 @@ function metaOf(id) {
 
 function render() {
   applyOrientation();
-  if (ui.mode === "english" && ui.screen !== "home") {
+  const focusKey = restoreOmniField ? (document.activeElement?.dataset?.omni || "") : "";
+  const caret = document.activeElement?.selectionStart;
+  if (ui.mode === "english" && ui.screen !== "home" && ui.screen !== "settings") {
     ensureEnglish();
+    syncOmniChrome();
     return;
   }
   teardownEnglish();
   const body = ui.screen === "home" ? renderHome()
-    : ui.screen === "setup" ? renderSetup()
-      : renderMatch();
+    : ui.screen === "settings" ? renderSettings()
+      : ui.screen === "setup" ? renderSetup()
+        : renderMatch();
   app.innerHTML = body + (ui.modal ? renderModal() : "") + (ui.toast ? `<p class="toast" role="status">${esc(ui.toast)}</p>` : "");
+  if (focusKey === "host" || focusKey === "port" || focusKey === "path") {
+    const field = app.querySelector(`[data-omni="${focusKey}"]`);
+    if (field) {
+      field.focus();
+      if (typeof caret === "number") field.setSelectionRange(caret, caret);
+    }
+  }
   if (ui.toast) {
     clearTimeout(ui.toastTimer);
     ui.toastTimer = setTimeout(() => { ui.toast = ""; const node = app.querySelector(".toast"); if (node) node.remove(); }, 2400);
   }
   const view = ui.match && ui.screen === "live" ? project(ui.match) : null;
   if (view && liveRegion) liveRegion.textContent = `${view.subhead || ""} ${view.headline || ""} ${view.headlineLabel || ""}`;
+  syncOmniChrome();
 }
 
 function renderHome() {
   const saved = ui.saved;
   return `<section class="screen screen-home">
-    ${topbar("The Snake", "501")}
+    ${topbar("The Snake", "501", `<button class="ghost" data-action="settings">Settings</button>`)}
     <div class="home-scroll">
       <figure class="hero"><img src="./icons/home-art.jpg" alt="Jake the Snake cobra and wordmark"></figure>
       ${saved ? `<div class="resume"><div><strong>Match in progress</strong><p class="muted">${esc(metaOf(saved.mode)?.name || "Game")}</p></div><button class="primary" data-action="resume">Resume</button></div>` : ""}
@@ -620,6 +667,33 @@ function nums(list) {
 
 function levels(current) {
   return Array.from({ length: 15 }, (_, index) => `<option value="${index + 1}" ${String(current) === String(index + 1) ? "selected" : ""}>Level ${index + 1}</option>`).join("");
+}
+
+function renderSettings() {
+  const omni = ui.omni || normaliseOmniSettings(null);
+  const logButton = `<button type="button" class="ghost" data-action="omni-log">Message log</button>`;
+  const fields = omni.enabled ? `
+    <p class="muted">The board talks to one app at a time. Close DartCounter or the Target app, then enter the address. The boxes stay empty until you type them.</p>
+    <div class="setup-grid">
+      <label class="field">IP address<input class="texty" data-omni="host" value="${esc(omni.host)}" placeholder="192.168.x.x" autocomplete="off" autocapitalize="off" spellcheck="false" inputmode="decimal"></label>
+      <label class="field">Port<input class="texty" data-omni="port" value="${esc(omni.port)}" placeholder="Port" inputmode="numeric" autocomplete="off" spellcheck="false"></label>
+      <label class="field">Path<input class="texty" data-omni="path" value="${esc(omni.path)}" placeholder="Only if you have recorded one" autocomplete="off" autocapitalize="off" spellcheck="false"></label>
+    </div>
+    <p>${esc(omniStatusLine())}</p>
+    ${ui.omniHint ? `<p class="omni-hint ${ui.omniHint === OMNI_IN_USE_HINT ? "omni-hint-busy" : ""}" role="status">${esc(ui.omniHint)}</p>` : ""}
+    ${logButton}` : `
+    <p class="muted">Auto-score is off. Darts are entered on the pad, as usual.</p>
+    ${omniLog.list().length ? logButton : ""}`;
+  return `<section class="screen screen-setup">
+    ${topbar("Settings", "Snake 501")}
+    <div class="setup-scroll">
+      <section class="setup-block">
+        <h2>Target Omni</h2>
+        <button type="button" class="choice ${omni.enabled ? "on" : ""}" data-action="omni-toggle" aria-pressed="${omni.enabled ? "true" : "false"}">Use Target Omni</button>
+        ${fields}
+      </section>
+    </div>
+  </section>`;
 }
 
 function renderMatch() {
@@ -726,7 +800,8 @@ function renderFields(form) {
 }
 
 function desiredOrientation() {
-  if (ui.mode === "cricket" && ui.screen !== "home") return "portrait";
+  if (ui.screen === "home" || ui.screen === "settings") return "landscape";
+  if (ui.mode === "cricket") return "portrait";
   return "landscape";
 }
 
@@ -747,6 +822,8 @@ function ensureEnglish() {
   teardownEnglish();
   app.innerHTML = `<div class="english-root" id="english-root"></div>`;
   ui.englishDestroy = mountEnglish(document.getElementById("english-root"), {
+    bind(api) { ui.englishAccept = api?.acceptDart || null; },
+    afterRender() { syncOmniChrome(); },
     autostart: !!ui.englishAutostart,
     initialInner() {
       if (ui.screen !== "live" || ui.match?.mode !== "english") return null;
@@ -778,6 +855,7 @@ function ensureEnglish() {
 }
 
 function teardownEnglish() {
+  ui.englishAccept = null;
   if (!ui.englishDestroy) return;
   ui.englishDestroy();
   ui.englishDestroy = null;
@@ -867,8 +945,8 @@ function renderModal() {
   return `<div class="modal-back"><div class="modal" role="dialog" aria-modal="true"><h2>Leave this match?</h2><p>The score stays on this tablet until you abandon it.</p><div class="row"><button class="danger" data-action="abandon">Abandon</button><button class="primary" data-action="close-modal">Keep playing</button></div></div></div>`;
 }
 
-function topbar(title, sub) {
-  return `<header class="topbar"><img class="brand-mark" src="./icons/icon-192.png" alt=""><div><p class="wordmark">${esc(title)}<span>${esc(sub || "501")}</span></p></div><div class="top-actions"><button class="ghost" data-action="home">Modes</button></div></header>`;
+function topbar(title, sub, extras = "") {
+  return `<header class="topbar"><img class="brand-mark" src="./icons/icon-192.png" alt=""><div><p class="wordmark">${esc(title)}<span>${esc(sub || "501")}</span></p></div><div class="top-actions">${extras}<button class="ghost" data-action="home">Modes</button></div></header>`;
 }
 
 function safeRules() {
@@ -919,4 +997,245 @@ function esc(value) {
 
 async function wake() {
   try { ui.wakeLock = await navigator.wakeLock?.request("screen"); } catch { /* the tablet may ignore this */ }
+}
+
+function toggleOmni() {
+  ui.omni.enabled = !ui.omni.enabled;
+  ui.omniBoard = "";
+  ui.omniNoticeShown = false;
+  document.getElementById("omni-notice")?.remove();
+  persistOmniSettings();
+  omniLink.start(ui.omni);
+  render();
+}
+
+function persistOmniSettings() {
+  write(OMNI_STORAGE_KEY, normaliseOmniSettings(ui.omni));
+}
+
+function persistOmniLog() {
+  try { localStorage.setItem(OMNI_LOG_STORAGE_KEY, JSON.stringify(omniLog.list())); } catch { /* keep the log in memory */ }
+}
+
+function handleOmniStatus(next) {
+  const previous = ui.omniStatus;
+  ui.omniStatus = next.status;
+  ui.omniHint = next.hint || "";
+  if (next.status !== "connected") ui.omniBoard = "";
+  if (next.status === "connected") ui.omniNoticeShown = false;
+  if (onLiveScoringScreen() && next.status === "error" && previous !== "error" && ui.omniHint && !ui.omniNoticeShown) {
+    ui.omniNoticeShown = true;
+    showOmniNotice(ui.omniHint);
+  }
+  syncOmniChrome();
+  if (ui.omniLogOpen) renderOmniPanel();
+  if (ui.screen === "settings") render();
+}
+
+function handleOmniMessage(data) {
+  omniLog.add(data);
+  persistOmniLog();
+  let outcome = null;
+  try { outcome = interpret(parse(data)); } catch { outcome = null; }
+  if (outcome?.kind === "state") {
+    ui.omniBoard = outcome.state;
+    syncOmniChrome();
+  } else if (outcome?.kind === "dart") {
+    deliverOmniDart(outcome.dart);
+  }
+  if (ui.omniLogOpen) renderOmniPanel();
+}
+
+function deliverOmniDart(dart) {
+  if (ui.englishAccept) {
+    try { ui.englishAccept(dart); } catch { /* Undo on the pad removes a misread. */ }
+    return;
+  }
+  if (ui.screen !== "live" || !ui.match) return;
+  let view = null;
+  try { view = project(ui.match); } catch { return; }
+  if (!view?.canThrow || view.botTurn || view.phase === "confirm" || view.phase === "done") return;
+  if (ui.pending.length >= 3) return;
+  if (ui.input === "total") ui.input = "darts";
+  addPending(dart);
+}
+
+function onLiveScoringScreen() {
+  if (document.getElementById("english-root")) return document.body.dataset.screen === "live";
+  if (ui.screen !== "live" || !ui.match) return false;
+  try {
+    const view = project(ui.match);
+    return view.phase !== "done" && view.phase !== "confirm";
+  } catch {
+    return false;
+  }
+}
+
+function omniStatusLine() {
+  const status = ui.omniStatus || "disconnected";
+  const label = status === "connecting" ? "Connecting"
+    : status === "connected" ? "Connected"
+      : status === "error" ? "Error"
+        : "Disconnected";
+  return `Status: ${label}`;
+}
+
+function omniPillText() {
+  const status = ui.omniStatus || "disconnected";
+  if (status === "connected" && ui.omniBoard === "calibrating") return "Omni calibrating";
+  if (status === "connected" && ui.omniBoard === "takeout") return "Omni takeout";
+  if (status === "connected" && ui.omniBoard === "ready") return "Omni ready";
+  if (status === "connecting") return "Omni connecting";
+  if (status === "connected") return "Omni connected";
+  if (status === "error") return "Omni error";
+  return "Omni disconnected";
+}
+
+function syncOmniChrome() {
+  if (!onLiveScoringScreen()) document.getElementById("omni-notice")?.remove();
+  const show = !!ui.omni?.enabled && onLiveScoringScreen();
+  let node = document.getElementById("omni-status");
+  if (!show) {
+    node?.remove();
+    return;
+  }
+  if (!node) {
+    node = document.createElement("button");
+    node.type = "button";
+    node.id = "omni-status";
+    node.className = "omni-status";
+    node.addEventListener("click", openOmniLog);
+    node.setAttribute("aria-live", "polite");
+    document.body.appendChild(node);
+  }
+  node.dataset.status = ui.omniStatus || "disconnected";
+  node.textContent = omniPillText();
+  const label = ui.omniStatus === "error" && ui.omniHint ? `${omniPillText()}. ${ui.omniHint}` : omniPillText();
+  node.title = label;
+  node.setAttribute("aria-label", `${label}. Open the message log.`);
+}
+
+function showOmniNotice(message) {
+  let node = document.getElementById("omni-notice");
+  if (!node) {
+    node = document.createElement("p");
+    node.id = "omni-notice";
+    node.className = "omni-notice";
+    node.setAttribute("role", "status");
+    document.body.appendChild(node);
+  }
+  node.textContent = message;
+  clearTimeout(ui.omniNoticeTimer);
+  ui.omniNoticeTimer = setTimeout(() => document.getElementById("omni-notice")?.remove(), 10000);
+}
+
+function openOmniLog() {
+  ui.omniLogOpen = true;
+  renderOmniPanel();
+}
+
+function closeOmniLog() {
+  capturePanelNotes();
+  persistOmniLog();
+  ui.omniLogOpen = false;
+  renderOmniPanel();
+}
+
+function renderOmniPanel() {
+  const existing = document.getElementById("omni-panel");
+  if (!ui.omniLogOpen) {
+    existing?.remove();
+    return;
+  }
+  const noteId = document.activeElement?.dataset?.omniNote;
+  const caret = document.activeElement?.selectionStart;
+  if (existing) capturePanelNotes();
+  const panel = existing || document.createElement("div");
+  if (!existing) {
+    panel.id = "omni-panel";
+    panel.className = "omni-panel";
+    panel.addEventListener("click", onOmniPanelClick);
+    panel.addEventListener("input", onOmniPanelInput);
+    document.body.appendChild(panel);
+  }
+  panel.innerHTML = omniPanelHtml();
+  if (noteId && /^\d+$/.test(String(noteId))) {
+    const field = panel.querySelector(`[data-omni-note="${noteId}"]`);
+    if (field) {
+      field.focus();
+      if (typeof caret === "number") field.setSelectionRange(caret, caret);
+    }
+  }
+}
+
+function omniPanelHtml() {
+  const entries = omniLog.list().slice().reverse();
+  const hint = ui.omniHint ? `<p class="omni-hint ${ui.omniHint === OMNI_IN_USE_HINT ? "omni-hint-busy" : ""}" role="status">${esc(ui.omniHint)}</p>` : "";
+  const rows = entries.length ? entries.map((entry) => `<article class="omni-entry">
+      <p class="muted">${esc(formatWhen(entry.at))}${entry.encoding === "base64" ? " · binary" : ""}</p>
+      <pre class="omni-raw">${esc(entry.raw)}</pre>
+      <label class="field">What was thrown<input class="texty" data-omni-note="${entry.id}" value="${esc(entry.note)}" placeholder="e.g. treble 20" autocomplete="off" enterkeyhint="done"></label>
+    </article>`).join("") : `<p class="muted">No messages yet. With the board connected, each raw message is listed here.</p>`;
+  return `<div class="omni-sheet" role="dialog" aria-modal="true" aria-labelledby="omni-log-title">
+    <h2 id="omni-log-title">Omni message log</h2>
+    <p class="omni-panel-status">${esc(omniStatusLine())}</p>
+    ${hint}
+    <p class="muted">Type what you threw beside each message, then download the log. Save the .json file into test/fixtures/omni/ so the tests can replay it.</p>
+    <div class="row">
+      <button type="button" class="primary" data-omni-action="export-json">Download .json</button>
+      <button type="button" class="ghost" data-omni-action="export-text">Download .txt</button>
+      <button type="button" class="ghost" data-omni-action="clear">Clear log</button>
+      <button type="button" class="ghost" data-omni-action="close">Close</button>
+    </div>
+    <div class="omni-entries">${rows}</div>
+  </div>`;
+}
+
+function onOmniPanelClick(event) {
+  if (event.target.id === "omni-panel") {
+    closeOmniLog();
+    return;
+  }
+  const action = event.target.closest("[data-omni-action]")?.dataset.omniAction;
+  if (action === "close") closeOmniLog();
+  if (action === "export-text" || action === "export-json") capturePanelNotes();
+  if (action === "clear") {
+    capturePanelNotes();
+    omniLog.clear();
+    persistOmniLog();
+    renderOmniPanel();
+  }
+  if (action === "export-text") downloadFile("omni-capture.txt", omniLog.toText(), "text/plain;charset=utf-8");
+  if (action === "export-json") downloadFile("omni-capture.json", omniLog.toJSON(), "application/json");
+}
+
+function onOmniPanelInput(event) {
+  const field = event.target.closest("[data-omni-note]");
+  if (!field) return;
+  omniLog.setNote(field.dataset.omniNote, field.value);
+  persistOmniLog();
+}
+
+function capturePanelNotes() {
+  document.querySelectorAll("[data-omni-note]").forEach((field) => {
+    omniLog.setNote(field.dataset.omniNote, field.value);
+  });
+}
+
+function formatWhen(iso) {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return String(iso || "");
+  return date.toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "medium" });
+}
+
+function downloadFile(filename, contents, type) {
+  const blob = new Blob([contents], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1500);
 }

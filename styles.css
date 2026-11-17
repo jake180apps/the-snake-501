@@ -390,3 +390,109 @@ select, .texty {
 @media (prefers-reduced-motion: reduce) {
   * { scroll-behavior: auto !important; transition: none !important; animation: none !important; }
 }
+
+/* Fixed, so a live scoreboard does not grow or scroll when auto-score is on. */
+.omni-status {
+  position: fixed;
+  z-index: 4;
+  top: max(2px, env(safe-area-inset-top));
+  left: 50%;
+  transform: translateX(-50%);
+  height: 22px;
+  min-height: 0;
+  max-width: min(168px, 46vw);
+  margin: 0;
+  padding: 0 8px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-radius: 999px;
+  border: 1px solid var(--line);
+  background: rgba(11, 11, 16, 0.92);
+  color: var(--muted);
+  font-size: 0.68rem;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.01em;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.omni-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+  flex: 0 0 auto;
+}
+.omni-status[data-status="connecting"] { color: #e6c15a; border-color: #8a6a20; }
+.omni-status[data-status="connected"] { color: #8fd4ff; border-color: var(--blue); }
+.omni-status[data-status="error"] { color: var(--danger); border-color: #6a3030; }
+
+.omni-notice {
+  position: fixed;
+  z-index: 7;
+  top: calc(max(2px, env(safe-area-inset-top)) + 26px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(440px, calc(100vw - 24px));
+  margin: 0;
+  padding: 8px 10px;
+  border-radius: 12px;
+  background: #102033;
+  border: 1px solid #6a3030;
+  color: var(--text);
+  font-size: 0.82rem;
+  font-weight: 650;
+  line-height: 1.35;
+  text-align: center;
+  pointer-events: none;
+}
+
+.omni-hint {
+  margin: 0;
+  padding: 10px 12px;
+  border-radius: 12px;
+  background: #102033;
+  border: 1px solid var(--line);
+  color: var(--text);
+  font-weight: 650;
+}
+.omni-hint-busy { border-color: #6a3030; }
+
+.omni-panel {
+  position: fixed;
+  inset: 0;
+  z-index: 30;
+  background: rgba(0, 0, 0, 0.62);
+  display: grid;
+  place-items: center;
+  padding: 16px;
+}
+.omni-sheet {
+  width: min(640px, 100%);
+  max-height: min(640px, calc(100dvh - 32px));
+  overflow: auto;
+  overscroll-behavior: contain;
+  background: var(--bg-2);
+  border: 1px solid var(--navy);
+  border-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+.omni-entries { display: flex; flex-direction: column; gap: 12px; }
+.omni-raw {
+  margin: 0;
+  max-height: 7rem;
+  overflow: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  font-size: 0.78rem;
+  background: #10131a;
+  border-radius: 8px;
+  padding: 8px;
+}

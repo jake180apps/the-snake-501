@@ -1,0 +1,4 @@
+PLACEHOLDER
+This is not a real Target Omni frame.
+Replace this file with a captured message, or add an exported omni-capture.json beside it.
+The adapter returns null until the wire format is known.
